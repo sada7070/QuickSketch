@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@repo/db": "workspace:*",
     "@types/express": "^5.0.1",
     "express": "^4.21.2"
   },
