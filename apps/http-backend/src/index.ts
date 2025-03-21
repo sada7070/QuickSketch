@@ -44,4 +44,46 @@ app.post("/signup", async (req, res) => {
     }
 });
 
+app.post("/signin", async(req, res) => {
+    const parsedData = signInSchema.safeParse(req.body);
+
+    if(!parsedData.success) {
+        res.status(411).json({
+            message: "Incorrect format."
+        });
+        return;
+    }
+
+    const userExist = await prismaClient.user.findFirst({
+        where: {
+            email: parsedData.data.email
+        }
+    });
+
+    if(!userExist) {
+        res.status(401).json({
+            message: "Email does not exist."
+        });
+        return;
+    }
+
+    const passwordMatched = await bcrypt.compare(parsedData.data.password, userExist.password);
+
+    if(!passwordMatched) {
+        res.status(401).json({
+            message: "Incorrect password."
+        });
+        return;
+    }
+    
+    const token = jwt.sign({
+        userId: userExist.id
+    }, process.env.JWT_SECRET!);
+
+    res.status(200).json({
+        message: "Signin succussful.",
+        token: token
+    });
+});
+
 app.listen(3001);
