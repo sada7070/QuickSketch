@@ -1,9 +1,10 @@
-import { signInSchema, signUpSchema } from "@repo/common/zod";
+import { createRoomSchema, signInSchema, signUpSchema } from "@repo/common/zod";
 import express from "express";
 import bcrypt from "bcrypt";
 import { prismaClient } from "@repo/db/prismaClient";
 import jwt from "jsonwebtoken";
 import "dotenv/config"
+import AuthenticatedRequest, { userMiddleware } from "./middleware";
 
 const app = express();
 
@@ -84,6 +85,39 @@ app.post("/signin", async(req, res) => {
         message: "Signin succussful.",
         token: token
     });
+});
+
+// to create a room
+app.post("/room", userMiddleware, async(req:AuthenticatedRequest, res) => {
+    const parsedData = createRoomSchema.safeParse(req.body);
+
+    if(!parsedData.success) {
+        res.status(411).json({
+            message: "Incorrect format."
+        });
+        return;
+    }
+
+    const userId = req.userId;
+
+    try{
+        const room = await prismaClient.room.create({
+            data: {
+                slug: parsedData.data.roomName,
+                adminId: userId!
+            }
+        });
+
+        res.status(200).json({
+            message: "Room created succussfully.",
+            roomId: room.id
+        });
+        
+    } catch {
+        res.status(409).json({
+            message: "Room name already exist."
+        });
+    }
 });
 
 app.listen(3001);
