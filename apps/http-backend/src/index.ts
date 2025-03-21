@@ -7,6 +7,7 @@ import "dotenv/config"
 import AuthenticatedRequest, { userMiddleware } from "./middleware";
 
 const app = express();
+app.use(express.json());
 
 app.post("/signup", async (req, res) => {
     const parsedData = signUpSchema.safeParse(req.body);
@@ -112,7 +113,7 @@ app.post("/room", userMiddleware, async(req:AuthenticatedRequest, res) => {
             message: "Room created succussfully.",
             roomId: room.id
         });
-        
+
     } catch {
         res.status(409).json({
             message: "Room name already exist."
